@@ -39,7 +39,7 @@ func TestCreateUserFunctional(t *testing.T) {
 
 	var res user.User
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		t.Fatalf("Failed to decode response: %v", err)
+		t.Fatalf("Failed to decode response: %v, body: %s", err, resp.Body)
 	}
 
 	if res.Email != payload["email"] || res.Age != payload["age"] {

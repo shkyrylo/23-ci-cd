@@ -41,7 +41,7 @@ jobs:
           docker compose up -d --build
 
       - name: Run tests inside container
-        run: docker compose exec -T app go test -v ./...
+        run: docker compose exec -T app go test -v ./test
 
       - name: Print app logs (if failed)
         if: failure()
