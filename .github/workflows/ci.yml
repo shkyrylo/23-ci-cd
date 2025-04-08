@@ -37,25 +37,15 @@ jobs:
 
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Start containers
-        run: docker-compose up -d
-
-      - name: Wait for app to be ready
-        run: |
-          for i in {1..15}; do
-            curl -s http://localhost:8080/users && exit 0 || true
-            echo "Waiting for app to be ready..."
-            sleep 2
-          done
-          echo "❌ App did not become ready in time!" && docker-compose logs && exit 1
+          
+          docker compose up -d --build
 
       - name: Run tests inside container
         run: docker-compose exec -T app go test -v ./...
 
       - name: Print app logs (if failed)
         if: failure()
-        run: docker-compose logs
+        run: docker compose logs app
 
       - name: Shut down containers
         if: always()
