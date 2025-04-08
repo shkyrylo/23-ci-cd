@@ -1,0 +1,62 @@
+name: CI with Docker Compose
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile', '**/go.mod', '**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Build app image with Buildx
+        run: |
+          docker buildx create --use
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+            --load \
+            -t myapp:ci \
+            -f Dockerfile .
+
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Start containers
+        run: docker-compose up -d
+
+      - name: Wait for app to be ready
+        run: |
+          for i in {1..15}; do
+            curl -s http://localhost:8080/users && exit 0 || true
+            echo "Waiting for app to be ready..."
+            sleep 2
+          done
+          echo "❌ App did not become ready in time!" && docker-compose logs && exit 1
+
+      - name: Run tests inside container
+        run: docker-compose exec -T app go test -v ./...
+
+      - name: Print app logs (if failed)
+        if: failure()
+        run: docker-compose logs
+
+      - name: Shut down containers
+        if: always()
+        run: docker-compose down
