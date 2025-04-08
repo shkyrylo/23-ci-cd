@@ -25,7 +25,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docker-
 
-      - name: Build app image with Buildx
+      - name: Build and start containers
         run: |
           docker buildx create --use
           docker buildx build \
@@ -41,7 +41,7 @@ jobs:
           docker compose up -d --build
 
       - name: Run tests inside container
-        run: docker-compose exec -T app go test -v ./...
+        run: docker compose exec -T app go test -v ./...
 
       - name: Print app logs (if failed)
         if: failure()
@@ -49,4 +49,4 @@ jobs:
 
       - name: Shut down containers
         if: always()
-        run: docker-compose down
+        run: docker compose down
