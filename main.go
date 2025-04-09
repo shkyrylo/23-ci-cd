@@ -38,6 +38,6 @@ func main() {
 		json.NewEncoder(w).Encode(u)
 	}).Methods("POST")
 
-	log.Println("Server started at :8080")
+	log.Println("Server started at :8080 port")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
