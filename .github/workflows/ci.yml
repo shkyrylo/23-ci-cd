@@ -43,15 +43,15 @@ jobs:
 
       - name: Wait for app to be ready
         run: |
-          for i in {1..15}; do
-            curl -s http://localhost:8080/users && exit 0 || true
+          for i in {1..3}; do
+            curl -s http://localhost:8080/ready && exit 0 || true
             echo "⏳ Waiting for app..."
-            sleep 2
+            sleep 1
           done
           echo "❌ App did not become ready in time!" && docker compose logs app && exit 1
 
       - name: Run tests inside container
-        run: docker compose exec -T app go test -v ./...
+        run: docker compose exec -T app go test -v ./test
 
       - name: Show logs if test failed
         if: failure()

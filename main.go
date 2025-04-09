@@ -16,21 +16,26 @@ func main() {
 	defer db.Close()
 
 	r := mux.NewRouter()
+
+	r.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	r.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
-		var user user.User
-		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		var u user.User
+		if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		_, err := db.Exec("INSERT INTO users (email, age) VALUES (?, ?)", user.Email, user.Age)
+		_, err := db.Exec("INSERT INTO users (email, age) VALUES (?, ?)", u.Email, u.Age)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(u)
 	}).Methods("POST")
 
 	log.Println("Server started at :8080")
